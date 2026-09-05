@@ -141,3 +141,12 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# macOS
+.DS_Store
+.github/.DS_Store
+**/.DS_Store
+
+# Lint config (fetched from org CI — not committed)
+.eslintrc.json
+.prettierrc
