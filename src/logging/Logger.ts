@@ -15,6 +15,7 @@ export interface LogDestination {
 
 export class ConsoleLogDestination implements LogDestination {
   write(message: string, level: LogLevel): void {
+    // eslint-disable-next-line no-console
     console.log(`[${LogLevel[level]}] ${message}`);
   }
 }
