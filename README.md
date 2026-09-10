@@ -1,11 +1,11 @@
+[![React Native](https://img.shields.io/badge/RN-TypeScript-7F77DD?style=flat)](https://reactnative.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white&style=flat)](https://www.typescriptlang.org/) [![CI](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-core-rn/ci.yml?label=ci&style=flat)](https://github.com/Syzygy-Hub/syzygy-core-rn/actions/workflows/ci.yml) [![npm](https://img.shields.io/badge/version-1.0.0-D85A30?style=flat)](https://www.npmjs.com/package/syzygy-core-rn) [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-dark-1200.png">
   <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
 </picture>
 
 # syzygy-core-rn
-
-[![React Native](https://img.shields.io/badge/RN-TypeScript-7F77DD?style=flat)](https://reactnative.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white&style=flat)](https://www.typescriptlang.org/) [![CI](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-core-rn/ci.yml?label=ci&style=flat)](https://github.com/Syzygy-Hub/syzygy-core-rn/actions/workflows/ci.yml) [![npm](https://img.shields.io/badge/version-1.0.0-D85A30?style=flat)](https://www.npmjs.com/package/syzygy-core-rn) [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
 
 Core infrastructure modules for the Syzygy React Native ecosystem — dependency injection, state management, event bus, logging, feature flags, navigation, validation, configuration, app lifecycle, and scheduling.
 
