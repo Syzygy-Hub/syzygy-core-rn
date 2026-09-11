@@ -62,11 +62,23 @@ export class Router {
     return this.stack.pop();
   }
 
-  /** Pop all routes except the root, leaving only the first route on the stack. */
-  popToRoot(): void {
+  /**
+   * Pop all routes except the root, leaving only the first route on the stack.
+   * Aborts if a guard returns false for the root route.
+   * @returns true if popToRoot was allowed, false if a guard blocked it.
+   */
+  popToRoot(): boolean {
+    const root = this.stack[0];
+    if (root === undefined) {
+      return true;
+    }
+    if (!this.canNavigate(root)) {
+      return false;
+    }
     if (this.stack.length > 1) {
       this.stack.splice(1);
     }
+    return true;
   }
 
   /**
@@ -136,6 +148,16 @@ export class DeepLinkParser {
     const schemeIndex = url.indexOf('://');
     if (schemeIndex >= 0) {
       path = url.substring(schemeIndex + 3);
+    }
+
+    // Strip fragment (#...) first, then query string (?...)
+    const fragmentIndex = path.indexOf('#');
+    if (fragmentIndex >= 0) {
+      path = path.substring(0, fragmentIndex);
+    }
+    const queryIndex = path.indexOf('?');
+    if (queryIndex >= 0) {
+      path = path.substring(0, queryIndex);
     }
 
     const urlSegments = path.split('/').filter((s) => s.length > 0);

@@ -7,6 +7,7 @@ import {
   LoggerProtocol,
   LogLevel as FoundationLogLevel,
   LogEntry,
+  SyzygyTimestamp,
 } from 'syzygy-foundation-rn';
 
 /** Log severity levels, ordered from least to most severe. Core extends Foundation with Verbose. */
@@ -22,7 +23,13 @@ export enum LogLevel {
 /** A destination that receives formatted log messages. */
 export interface LogDestination {
   /** Write a log entry to this destination. */
-  write(message: string, level: LogLevel, metadata: Record<string, string>): void;
+  write(
+    message: string,
+    level: LogLevel,
+    metadata: Record<string, string>,
+    timestamp?: SyzygyTimestamp,
+    error?: Error,
+  ): void;
 }
 
 /** Log destination that writes to the console. */
@@ -37,14 +44,25 @@ export class ConsoleLogDestination implements LogDestination {
   };
 
   /** Write a log entry to the console. */
-  write(message: string, level: LogLevel, metadata: Record<string, string>): void {
+  write(
+    message: string,
+    level: LogLevel,
+    metadata: Record<string, string>,
+    timestamp?: SyzygyTimestamp,
+    error?: Error,
+  ): void {
     const meta = Object.keys(metadata).length > 0
       ? ` ${JSON.stringify(metadata)}`
       : '';
-    const line = `[${ConsoleLogDestination.levelNames[level]}] ${message}${meta}`;
+    const ts = timestamp !== undefined ? `[${new Date(timestamp.millisecondsSinceEpoch).toISOString()}] ` : '';
+    const line = `${ts}[${ConsoleLogDestination.levelNames[level]}] ${message}${meta}`;
     if (level >= LogLevel.Error) {
       // eslint-disable-next-line no-console
       console.error(line);
+      if (error !== undefined) {
+        // eslint-disable-next-line no-console
+        console.error(error);
+      }
     } else if (level === LogLevel.Warning) {
       // eslint-disable-next-line no-console
       console.warn(line);
@@ -97,21 +115,20 @@ export class Logger implements LoggerProtocol {
   }
 
   /** Dispatch a message to all destinations that meet the minimum level threshold. */
-  private dispatch(level: LogLevel, message: string, metadata: Record<string, string> = {}): void {
+  private dispatch(
+    level: LogLevel,
+    message: string,
+    metadata: Record<string, string> = {},
+    timestamp?: SyzygyTimestamp,
+    error?: Error,
+  ): void {
     for (const entry of this.destinations) {
       if (level >= entry.minLevel) {
-        entry.destination.write(message, level, metadata);
+        entry.destination.write(message, level, metadata, timestamp, error);
       }
     }
   }
 
-  /**
-   * Foundation LoggerProtocol conformance entry point.
-   *
-   * NOTE (Tier 2): `entry.timestamp` is silently dropped — Core's
-   * `LogDestination.write()` signature does not carry a timestamp.
-   * Will be forwarded in Tier 2 integration (v1.1.0).
-   */
   /**
    * Log a Foundation LogEntry (LoggerProtocol implementation).
    * Foundation's LogLevel is mapped to the nearest Core LogLevel.
@@ -131,7 +148,7 @@ export class Logger implements LoggerProtocol {
   ): void {
     if (typeof entryOrLevel === 'object') {
       const coreLevel = Logger.mapFoundationLevel(entryOrLevel.level);
-      this.dispatch(coreLevel, entryOrLevel.message, entryOrLevel.metadata);
+      this.dispatch(coreLevel, entryOrLevel.message, entryOrLevel.metadata, entryOrLevel.timestamp, entryOrLevel.error);
     } else {
       this.dispatch(entryOrLevel, message!, metadata);
     }
@@ -157,21 +174,13 @@ export class Logger implements LoggerProtocol {
     this.dispatch(LogLevel.Warning, message, metadata);
   }
 
-  /**
-   * NOTE (Tier 2): The `error` parameter satisfies Foundation's `LoggerProtocol`
-   * but is currently discarded at destinations. Will be forwarded in Tier 2 (v1.1.0).
-   */
   /** Log at Error level. */
   error(message: string, error?: Error, metadata?: Record<string, string>): void {
-    this.dispatch(LogLevel.Error, message, metadata ?? {});
+    this.dispatch(LogLevel.Error, message, metadata ?? {}, undefined, error);
   }
 
-  /**
-   * NOTE (Tier 2): The `error` parameter satisfies Foundation's `LoggerProtocol`
-   * but is currently discarded at destinations. Will be forwarded in Tier 2 (v1.1.0).
-   */
   /** Log at Critical level. */
   critical(message: string, error?: Error, metadata?: Record<string, string>): void {
-    this.dispatch(LogLevel.Critical, message, metadata ?? {});
+    this.dispatch(LogLevel.Critical, message, metadata ?? {}, undefined, error);
   }
 }

@@ -37,6 +37,18 @@ describe('Router', () => {
     expect(router.stackDepth).toBe(1);
     expect(router.currentRoute?.path).toBe('/a');
   });
+
+  // FIX 14 — guard blocks popToRoot
+  it('should block popToRoot when a guard rejects the root route', () => {
+    const router = new Router();
+    router.push({ path: '/root', parameters: {} });
+    router.push({ path: '/child', parameters: {} });
+    router.addGuard({ canNavigate: (to) => to.path !== '/root' });
+    const result = router.popToRoot();
+    expect(result).toBe(false);
+    // Stack should be unchanged
+    expect(router.stackDepth).toBe(2);
+  });
 });
 
 describe('DeepLinkParser', () => {
@@ -55,5 +67,30 @@ describe('DeepLinkParser', () => {
     const parser = new DeepLinkParser();
     parser.register('/user/:id', (params) => ({ path: '/user', parameters: params }));
     expect(parser.parse('myapp://settings')).toBeUndefined();
+  });
+
+  // FIX 13 — query string and fragment stripping
+  it('should match URL with query string (?key=value)', () => {
+    const parser = new DeepLinkParser();
+    parser.register('/user/:id', (params) => ({ path: '/user', parameters: params }));
+    const route = parser.parse('myapp://user/42?ref=home&tab=2');
+    expect(route).toBeDefined();
+    expect(route!.parameters).toEqual({ id: '42' });
+  });
+
+  it('should match URL with fragment (#section)', () => {
+    const parser = new DeepLinkParser();
+    parser.register('/user/:id', (params) => ({ path: '/user', parameters: params }));
+    const route = parser.parse('myapp://user/42#profile');
+    expect(route).toBeDefined();
+    expect(route!.parameters).toEqual({ id: '42' });
+  });
+
+  it('should match URL with both query string and fragment', () => {
+    const parser = new DeepLinkParser();
+    parser.register('/user/:id', (params) => ({ path: '/user', parameters: params }));
+    const route = parser.parse('myapp://user/42?ref=home#top');
+    expect(route).toBeDefined();
+    expect(route!.parameters).toEqual({ id: '42' });
   });
 });

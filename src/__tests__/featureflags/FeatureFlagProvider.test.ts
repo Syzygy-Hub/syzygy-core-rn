@@ -31,4 +31,22 @@ describe('InMemoryFeatureFlagProvider', () => {
     provider.clearOverride(darkMode);
     expect(provider.value(darkMode)).toBe(true);
   });
+
+  // FIX 22 — type-guard safe cast tests
+  it('should throw a descriptive error when base value type mismatches flag default type', () => {
+    const provider = new InMemoryFeatureFlagProvider();
+    // Simulate storing a value with a wrong type by using the internal map via any
+    (provider as unknown as { values: Map<string, unknown> }).values.set('dark_mode', 42);
+    expect(() => provider.value(darkMode)).toThrow(
+      'Type mismatch for feature flag "dark_mode": expected boolean, got number',
+    );
+  });
+
+  it('should throw a descriptive error when override type mismatches flag default type', () => {
+    const provider = new InMemoryFeatureFlagProvider();
+    (provider as unknown as { overrides: Map<string, unknown> }).overrides.set('dark_mode', 'yes');
+    expect(() => provider.value(darkMode)).toThrow(
+      'Type mismatch for feature flag "dark_mode": expected boolean, got string',
+    );
+  });
 });

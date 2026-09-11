@@ -39,4 +39,50 @@ describe('DI Container', () => {
     const container = new Container();
     expect(() => container.resolve('missing')).toThrow('No registration found');
   });
+
+  // FIX 16 — scoped through parent tests
+  it('two child containers should get independent scoped instances', () => {
+    const parent = new Container();
+    let count = 0;
+    parent.register<number>('dep', Lifetime.Scoped, () => ++count);
+    const child1 = parent.createChildContainer();
+    const child2 = parent.createChildContainer();
+    const v1 = child1.resolve<number>('dep');
+    const v2 = child2.resolve<number>('dep');
+    expect(v1).not.toBe(v2);
+    expect(v1).toBe(1);
+    expect(v2).toBe(2);
+  });
+
+  it('scoped resolved through parent should cache in child scope (not parent)', () => {
+    const parent = new Container();
+    let count = 0;
+    parent.register<number>('dep', Lifetime.Scoped, () => ++count);
+    const child = parent.createChildContainer();
+    const first = child.resolve<number>('dep');
+    const second = child.resolve<number>('dep');
+    expect(first).toBe(second); // cached in child
+    expect(first).toBe(1);
+  });
+
+  // FIX 17 — dispose tests
+  it('dispose() should prevent further resolve', () => {
+    const container = new Container();
+    container.register('key', Lifetime.Singleton, () => 42);
+    container.dispose();
+    expect(() => container.resolve('key')).toThrow('Container has been disposed');
+  });
+
+  it('dispose() should prevent further register', () => {
+    const container = new Container();
+    container.dispose();
+    expect(() => container.register('key', Lifetime.Singleton, () => 42)).toThrow('Container has been disposed');
+  });
+
+  it('resetRegistrations removes all registrations', () => {
+    const container = new Container();
+    container.register('key', Lifetime.Singleton, () => 42);
+    container.resetRegistrations();
+    expect(() => container.resolve('key')).toThrow('No registration found');
+  });
 });

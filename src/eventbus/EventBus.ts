@@ -14,6 +14,9 @@ export interface SubscriptionToken {
 /**
  * Publish/subscribe event bus with string-keyed event types.
  *
+ * Handlers are dispatched asynchronously via `queueMicrotask` so that
+ * errors in one handler do not prevent others from running.
+ *
  * @example
  * ```typescript
  * const bus = new EventBus();
@@ -23,17 +26,41 @@ export interface SubscriptionToken {
  */
 export class EventBus {
   private handlers = new Map<string, Set<EventHandler<unknown>>>();
+  private disposed = false;
+  private readonly onHandlerError?: (error: unknown, event: unknown) => void;
+
+  constructor(options?: { onHandlerError?: (error: unknown, event: unknown) => void }) {
+    this.onHandlerError = options?.onHandlerError;
+  }
 
   /**
    * Publish an event to all subscribers of the given event type.
+   * Each handler is invoked asynchronously via queueMicrotask.
+   * Errors in individual handlers are caught and logged; other handlers still run.
    * @param eventType - The string key identifying the event type.
    * @param event - The event payload.
+   * @throws Error if the EventBus has been disposed.
    */
   publish<E>(eventType: string, event: E): void {
+    if (this.disposed) {
+      throw new Error('EventBus has been disposed');
+    }
     const set = this.handlers.get(eventType);
     if (set) {
       for (const handler of set) {
-        handler(event);
+        const captured = handler;
+        queueMicrotask(() => {
+          try {
+            captured(event);
+          } catch (err) {
+            if (this.onHandlerError) {
+              this.onHandlerError(err, event);
+            } else {
+              // eslint-disable-next-line no-console
+              console.error('EventBus handler error:', err);
+            }
+          }
+        });
       }
     }
   }
@@ -43,8 +70,12 @@ export class EventBus {
    * @param eventType - The string key identifying the event type.
    * @param handler - Callback invoked when an event of this type is published.
    * @returns A token that can cancel the subscription.
+   * @throws Error if the EventBus has been disposed.
    */
   subscribe<E>(eventType: string, handler: EventHandler<E>): SubscriptionToken {
+    if (this.disposed) {
+      throw new Error('EventBus has been disposed');
+    }
     if (!this.handlers.has(eventType)) {
       this.handlers.set(eventType, new Set());
     }
@@ -60,5 +91,14 @@ export class EventBus {
         }
       },
     };
+  }
+
+  /**
+   * Dispose the EventBus: cancel all subscriptions, clear handler map,
+   * and mark disposed so further publish/subscribe throws.
+   */
+  dispose(): void {
+    this.handlers.clear();
+    this.disposed = true;
   }
 }

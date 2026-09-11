@@ -32,4 +32,24 @@ describe('ConfigRegistry', () => {
     expect(config.get(timeout)).toBe(60);
     expect(config.environment).toBe(SyzygyEnvironment.production);
   });
+
+  // FIX 22 — type-guard safe cast tests
+  it('should throw a descriptive error when global value type mismatches key default type', () => {
+    const config = new ConfigRegistry();
+    (config as unknown as { globalValues: Map<string, unknown> }).globalValues.set('apiUrl', 42);
+    expect(() => config.get(apiUrl)).toThrow(
+      'Type mismatch for config key "apiUrl": expected string, got number',
+    );
+  });
+
+  it('should throw a descriptive error when env value type mismatches key default type', () => {
+    const config = new ConfigRegistry(SyzygyEnvironment.debug);
+    const envMap = new Map<string, unknown>([['apiUrl', true]]);
+    (config as unknown as { envValues: Map<string, Map<string, unknown>> }).envValues.set(
+      SyzygyEnvironment.debug, envMap,
+    );
+    expect(() => config.get(apiUrl)).toThrow(
+      'Type mismatch for config key "apiUrl": expected string, got boolean',
+    );
+  });
 });
