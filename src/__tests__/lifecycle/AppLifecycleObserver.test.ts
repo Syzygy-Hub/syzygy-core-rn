@@ -59,6 +59,7 @@ describe('AppLifecycleTracker', () => {
   it('fromAppState() should seed tracker with current RN state', () => {
     const mockAppState: RNAppState = {
       currentState: 'background',
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       addEventListener(_type, _handler) {
         return { remove: jest.fn() };
       },
