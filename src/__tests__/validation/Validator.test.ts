@@ -43,6 +43,28 @@ describe('Validation', () => {
     if (result.kind === 'invalid') expect(result.messages[0]).toContain('at least 5');
   });
 
+  it('strict mode accepts valid email', () => {
+    const v = new EmailValidator(true);
+    expect(v.validate('user@example.com').isValid).toBe(true);
+  });
+
+  it('strict mode rejects local part over 64 chars', () => {
+    const v = new EmailValidator(true);
+    const local = 'a'.repeat(65);
+    expect(v.validate(`${local}@example.com`).isValid).toBe(false);
+  });
+
+  it('strict mode rejects total length over 255', () => {
+    const v = new EmailValidator(true);
+    const domain = 'b'.repeat(248);
+    expect(v.validate(`user@${domain}.com`).isValid).toBe(false);
+  });
+
+  it('strict mode rejects consecutive dots', () => {
+    const v = new EmailValidator(true);
+    expect(v.validate('user..name@example.com').isValid).toBe(false);
+  });
+
   it('ValidationPipeline collects all errors in CollectAll mode', () => {
     const pipeline = new ValidationPipeline<string>(ValidationMode.CollectAll)
       .add(new MinLengthValidator(10))

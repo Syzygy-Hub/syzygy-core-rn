@@ -35,6 +35,7 @@ export class StateStore<S, A> {
   private currentState: S;
   private reducer: StateReducer<S, A>;
   private listeners = new Set<StateListener<S>>();
+  private disposed = false;
 
   constructor(initialState: S, reducer: StateReducer<S, A>) {
     this.currentState = initialState;
@@ -49,8 +50,12 @@ export class StateStore<S, A> {
   /**
    * Dispatch an action through the reducer and notify subscribers.
    * @param action - The action to dispatch.
+   * @throws Error if the StateStore has been disposed.
    */
   dispatch(action: A): void {
+    if (this.disposed) {
+      throw new Error('StateStore has been disposed');
+    }
     this.currentState = this.reducer(this.currentState, action);
     for (const listener of this.listeners) {
       listener(this.currentState);
@@ -61,12 +66,25 @@ export class StateStore<S, A> {
    * Subscribe to all state changes.
    * @param listener - Callback invoked with the new state after each dispatch.
    * @returns An unsubscribe function.
+   * @throws Error if the StateStore has been disposed.
    */
   subscribe(listener: StateListener<S>): Unsubscribe {
+    if (this.disposed) {
+      throw new Error('StateStore has been disposed');
+    }
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
     };
+  }
+
+  /**
+   * Dispose the store: clear all subscriptions and mark disposed so further
+   * dispatch/subscribe throws.
+   */
+  dispose(): void {
+    this.listeners.clear();
+    this.disposed = true;
   }
 
   /**

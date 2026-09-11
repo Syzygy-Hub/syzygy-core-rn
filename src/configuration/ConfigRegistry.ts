@@ -48,14 +48,27 @@ export class ConfigRegistry {
   /**
    * Get the value for a config key.
    * Resolution: environment-specific > global > default.
+   * @throws Error if a stored value's type does not match the key's default value type.
    */
   get<T>(key: ConfigKey<T>): T {
     const envMap = this.envValues.get(this.currentEnvironment);
     if (envMap?.has(key.name)) {
-      return envMap.get(key.name) as T;
+      const stored = envMap.get(key.name);
+      if (typeof stored !== typeof key.defaultValue) {
+        throw new Error(
+          `Type mismatch for config key "${key.name}": expected ${typeof key.defaultValue}, got ${typeof stored}`,
+        );
+      }
+      return stored as T;
     }
     if (this.globalValues.has(key.name)) {
-      return this.globalValues.get(key.name) as T;
+      const stored = this.globalValues.get(key.name);
+      if (typeof stored !== typeof key.defaultValue) {
+        throw new Error(
+          `Type mismatch for config key "${key.name}": expected ${typeof key.defaultValue}, got ${typeof stored}`,
+        );
+      }
+      return stored as T;
     }
     return key.defaultValue;
   }

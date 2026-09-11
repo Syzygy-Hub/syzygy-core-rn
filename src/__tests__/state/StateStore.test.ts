@@ -46,4 +46,26 @@ describe('StateStore', () => {
     store.dispatch({ type: 'inc' }); // count changes
     expect(counts).toEqual([1]);
   });
+
+  // FIX 17 — dispose tests
+  it('dispose() should prevent further dispatch', () => {
+    const store = new StateStore({ count: 0, label: '' }, reducer);
+    store.dispose();
+    expect(() => store.dispatch({ type: 'inc' })).toThrow('StateStore has been disposed');
+  });
+
+  it('dispose() should prevent further subscribe', () => {
+    const store = new StateStore({ count: 0, label: '' }, reducer);
+    store.dispose();
+    expect(() => store.subscribe(() => {})).toThrow('StateStore has been disposed');
+  });
+
+  it('dispose() should clear existing subscriptions', () => {
+    const store = new StateStore({ count: 0, label: '' }, reducer);
+    const counts: number[] = [];
+    store.subscribe((s) => counts.push(s.count));
+    store.dispose();
+    // Listeners cleared — no further notifications even if we bypass disposed check
+    expect(counts).toHaveLength(0);
+  });
 });

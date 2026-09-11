@@ -99,12 +99,14 @@ export class Debouncer {
 export class Throttler {
   private intervalMs: number;
   private scheduler: SchedulerProtocol;
+  private clock: () => number;
   private pending: CancellableTask | undefined;
   private lastExecution = 0;
 
-  constructor(intervalMs: number, scheduler?: SchedulerProtocol) {
+  constructor(intervalMs: number, scheduler?: SchedulerProtocol, clock: () => number = Date.now) {
     this.intervalMs = intervalMs;
     this.scheduler = scheduler ?? new DefaultScheduler();
+    this.clock = clock;
   }
 
   /**
@@ -112,7 +114,7 @@ export class Throttler {
    * @param action - The action to throttle.
    */
   call(action: () => void): void {
-    const now = Date.now();
+    const now = this.clock();
     const elapsed = now - this.lastExecution;
 
     if (elapsed >= this.intervalMs) {
@@ -121,7 +123,7 @@ export class Throttler {
     } else if (!this.pending || this.pending.isCancelled) {
       const remaining = this.intervalMs - elapsed;
       this.pending = this.scheduler.schedule(remaining, () => {
-        this.lastExecution = Date.now();
+        this.lastExecution = this.clock();
         this.pending = undefined;
         action();
       });

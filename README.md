@@ -1,4 +1,4 @@
-[![React Native](https://img.shields.io/badge/RN-TypeScript-7F77DD?style=flat)](https://reactnative.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white&style=flat)](https://www.typescriptlang.org/) [![CI](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-core-rn/ci.yml?label=ci&style=flat)](https://github.com/Syzygy-Hub/syzygy-core-rn/actions/workflows/ci.yml) [![npm](https://img.shields.io/badge/version-1.0.0-D85A30?style=flat)](https://www.npmjs.com/package/syzygy-core-rn) [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
+[![React Native](https://img.shields.io/badge/RN-TypeScript-7F77DD?style=flat)](https://reactnative.dev/) [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-3178C6?logo=typescript&logoColor=white&style=flat)](https://www.typescriptlang.org/) [![CI](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-core-rn/ci.yml?label=ci&style=flat)](https://github.com/Syzygy-Hub/syzygy-core-rn/actions/workflows/ci.yml) [![npm](https://img.shields.io/badge/version-1.1.0-D85A30?style=flat)](https://www.npmjs.com/package/syzygy-core-rn) [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-dark-1200.png">
@@ -48,6 +48,32 @@ npm install syzygy-core-rn
 | Package | Version | Purpose |
 |---|---|---|
 | [syzygy-foundation-rn](https://github.com/Syzygy-Hub/syzygy-foundation-rn) | ^1.1.0 | Foundation contracts, primitives, and shared types |
+
+---
+
+## Lifecycle
+
+### Wiring to React Native AppState
+
+Use `AppLifecycleTracker.fromAppState(AppState)` to wire the tracker directly to React Native's `AppState`, so lifecycle transitions are forwarded automatically.
+
+```typescript
+import { AppState } from 'react-native';
+import { AppLifecycleTracker } from 'syzygy-core-rn';
+
+const { tracker, remove } = AppLifecycleTracker.fromAppState(AppState);
+
+tracker.addObserver({
+  onLifecycleChange: (state) => {
+    console.log('App lifecycle changed to:', state);
+  },
+});
+
+// When the component unmounts, stop listening:
+remove();
+```
+
+The factory seeds the tracker with the current `AppState.currentState` value and subscribes to future changes via `AppState.addEventListener('change', ...)`. Call `remove()` to unsubscribe and avoid memory leaks.
 
 ---
 

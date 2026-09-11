@@ -38,13 +38,26 @@ export class InMemoryFeatureFlagProvider implements FeatureFlagProvider {
   /**
    * Get the current value of a feature flag.
    * Resolution order: override > base value > default.
+   * @throws Error if a stored value's type does not match the flag's default value type.
    */
   value<T>(flag: FeatureFlag<T>): T {
     if (this.overrides.has(flag.key)) {
-      return this.overrides.get(flag.key) as T;
+      const stored = this.overrides.get(flag.key);
+      if (typeof stored !== typeof flag.defaultValue) {
+        throw new Error(
+          `Type mismatch for feature flag "${flag.key}": expected ${typeof flag.defaultValue}, got ${typeof stored}`,
+        );
+      }
+      return stored as T;
     }
     if (this.values.has(flag.key)) {
-      return this.values.get(flag.key) as T;
+      const stored = this.values.get(flag.key);
+      if (typeof stored !== typeof flag.defaultValue) {
+        throw new Error(
+          `Type mismatch for feature flag "${flag.key}": expected ${typeof flag.defaultValue}, got ${typeof stored}`,
+        );
+      }
+      return stored as T;
     }
     return flag.defaultValue;
   }
