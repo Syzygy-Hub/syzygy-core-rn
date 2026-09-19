@@ -175,4 +175,15 @@ describe('Logger', () => {
     expect(spy.entries[0].level).toBe(LogLevel.Critical);
     expect(spy.entries[0].error).toBe(err);
   });
+
+  it('concurrent log calls from multiple async operations complete without error', async () => {
+    const logger = new Logger();
+    const spy = new SpyDestination();
+    logger.addDestination(spy);
+    const ops = Array.from({ length: 10 }, (_, i) =>
+      Promise.resolve().then(() => logger.info(`message ${i}`)),
+    );
+    await expect(Promise.all(ops)).resolves.toBeDefined();
+    expect(spy.entries).toHaveLength(10);
+  });
 });
