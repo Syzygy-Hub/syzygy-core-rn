@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [1.2.0] - 2026-09-18
+
+### Changed
+- `LogLevel` now re-exported from Foundation — local duplicate removed
+- Foundation dependency updated to ^1.2.0
+- Added missing ESLint devDependencies for org config compatibility
+- Concurrency tests added for Logger and StorageProvider
+
 ## [1.1.0] - 2026-09-11
 
 ### Fixed
@@ -36,5 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - App lifecycle tracker with lifecycle-aware scoping
 - Scheduling utilities — debounce, throttle, delayed execution, cancellable timers
 
+[Unreleased]: https://github.com/Syzygy-Hub/syzygy-core-rn/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/Syzygy-Hub/syzygy-core-rn/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/Syzygy-Hub/syzygy-core-rn/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/Syzygy-Hub/syzygy-core-rn/releases/tag/1.0.0
