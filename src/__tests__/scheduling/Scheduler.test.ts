@@ -46,6 +46,12 @@ describe('Debouncer', () => {
     jest.advanceTimersByTime(200);
     expect(fn).not.toHaveBeenCalled();
   });
+
+  // New: cancel with no pending action should not throw
+  it('should not throw when cancel() is called with no pending action', () => {
+    const debouncer = new Debouncer(100);
+    expect(() => debouncer.cancel()).not.toThrow();
+  });
 });
 
 describe('Throttler', () => {
@@ -104,5 +110,21 @@ describe('Throttler', () => {
     // Second call at t=1100: interval has elapsed (1100 - 1000 = 100 >= 100), executes immediately
     throttler.call(fn);
     expect(fn).toHaveBeenCalledTimes(2);
+  });
+
+  // New: second call within cooldown interval should not execute immediately
+  it('should not execute second call immediately when within cooldown interval', () => {
+    let fakeNow = 1000;
+    const fakeClock = (): number => fakeNow;
+    const scheduler = new DefaultScheduler();
+    const throttler = new Throttler(200, scheduler, fakeClock);
+    const fn = jest.fn();
+
+    throttler.call(fn); // first call fires immediately at t=1000
+    expect(fn).toHaveBeenCalledTimes(1);
+
+    fakeNow = 1050; // only 50ms elapsed, cooldown is 200ms
+    throttler.call(fn); // within cooldown — should NOT execute synchronously
+    expect(fn).toHaveBeenCalledTimes(1); // still just 1 call
   });
 });

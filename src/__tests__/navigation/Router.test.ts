@@ -49,6 +49,15 @@ describe('Router', () => {
     // Stack should be unchanged
     expect(router.stackDepth).toBe(2);
   });
+
+  // New: replace() when stack is empty
+  it('should return false when replace() is called on an empty stack', () => {
+    const router = new Router();
+    const result = router.replace({ path: '/x', parameters: {} });
+    expect(result).toBe(false);
+    expect(router.stackDepth).toBe(0);
+    expect(router.currentRoute).toBeUndefined();
+  });
 });
 
 describe('DeepLinkParser', () => {
@@ -90,6 +99,15 @@ describe('DeepLinkParser', () => {
     const parser = new DeepLinkParser();
     parser.register('/user/:id', (params) => ({ path: '/user', parameters: params }));
     const route = parser.parse('myapp://user/42?ref=home#top');
+    expect(route).toBeDefined();
+    expect(route!.parameters).toEqual({ id: '42' });
+  });
+
+  // New: scheme URL with host segment (myapp://host/user/42)
+  it('should parse scheme URL with host prefix (myapp://host/user/42)', () => {
+    const parser = new DeepLinkParser();
+    parser.register('/user/:id', (params) => ({ path: '/user', parameters: params }));
+    const route = parser.parse('myapp://host/user/42');
     expect(route).toBeDefined();
     expect(route!.parameters).toEqual({ id: '42' });
   });

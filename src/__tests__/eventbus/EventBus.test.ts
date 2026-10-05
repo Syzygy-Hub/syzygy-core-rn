@@ -85,4 +85,17 @@ describe('EventBus', () => {
     expect(errors[0].error).toBe(handlerError);
     expect(errors[0].event).toBe('payload');
   });
+
+  // New: rapid publish delivers all events in order
+  it('should deliver all events in order under rapid publish', async () => {
+    const bus = new EventBus();
+    const received: number[] = [];
+    bus.subscribe<number>('tick', (e) => received.push(e));
+    for (let i = 0; i < 50; i++) {
+      bus.publish('tick', i);
+    }
+    await flushMicrotasks();
+    expect(received).toHaveLength(50);
+    expect(received).toEqual(Array.from({ length: 50 }, (_, i) => i));
+  });
 });
