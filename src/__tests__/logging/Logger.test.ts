@@ -53,14 +53,14 @@ describe('Logger', () => {
     const logger = new Logger();
     const spy = new SpyDestination();
     logger.addDestination(spy);
-    logger.verbose('v');
+    logger.verbose('v'); // maps to Debug
     logger.debug('d');
     logger.info('i');
     logger.warning('w');
     logger.error('e');
     logger.critical('c');
     expect(spy.entries.map((e) => e.level)).toEqual([
-      LogLevel.Verbose, LogLevel.Debug, LogLevel.Info,
+      LogLevel.Debug, LogLevel.Debug, LogLevel.Info,
       LogLevel.Warning, LogLevel.Error, LogLevel.Critical,
     ]);
   });
@@ -185,5 +185,27 @@ describe('Logger', () => {
     );
     await expect(Promise.all(ops)).resolves.toBeDefined();
     expect(spy.entries).toHaveLength(10);
+  });
+
+  // New: ConsoleLogDestination with timestamp
+  it('ConsoleLogDestination includes ISO timestamp in output when timestamp provided', () => {
+    const dest = new ConsoleLogDestination();
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const ts = createSyzygyTimestamp(0); // epoch = 1970-01-01T00:00:00.000Z
+    dest.write('hello', LogLevel.Info, {}, ts);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('1970-01-01T00:00:00.000Z'),
+    );
+    consoleSpy.mockRestore();
+  });
+
+  // New: ConsoleLogDestination with error
+  it('ConsoleLogDestination outputs error object when error provided at Error level', () => {
+    const dest = new ConsoleLogDestination();
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const err = new Error('test error');
+    dest.write('something went wrong', LogLevel.Error, {}, undefined, err);
+    expect(consoleSpy).toHaveBeenCalledWith(err);
+    consoleSpy.mockRestore();
   });
 });

@@ -5,20 +5,12 @@
 
 import {
   LoggerProtocol,
-  LogLevel as FoundationLogLevel,
+  LogLevel,
   LogEntry,
   SyzygyTimestamp,
 } from 'syzygy-foundation-rn';
 
-/** Log severity levels, ordered from least to most severe. Core extends Foundation with Verbose. */
-export enum LogLevel {
-  Verbose = 0,
-  Debug = 1,
-  Info = 2,
-  Warning = 3,
-  Error = 4,
-  Critical = 5,
-}
+export { LogLevel } from 'syzygy-foundation-rn';
 
 /** A destination that receives formatted log messages. */
 export interface LogDestination {
@@ -35,7 +27,6 @@ export interface LogDestination {
 /** Log destination that writes to the console. */
 export class ConsoleLogDestination implements LogDestination {
   private static readonly levelNames: Record<LogLevel, string> = {
-    [LogLevel.Verbose]: 'VERBOSE',
     [LogLevel.Debug]: 'DEBUG',
     [LogLevel.Info]: 'INFO',
     [LogLevel.Warning]: 'WARNING',
@@ -55,7 +46,7 @@ export class ConsoleLogDestination implements LogDestination {
       ? ` ${JSON.stringify(metadata)}`
       : '';
     const ts = timestamp !== undefined ? `[${new Date(timestamp.millisecondsSinceEpoch).toISOString()}] ` : '';
-    const line = `${ts}[${ConsoleLogDestination.levelNames[level]}] ${message}${meta}`;
+    const line = `${ts}[${ConsoleLogDestination.levelNames[level] ?? String(level)}] ${message}${meta}`;
     if (level >= LogLevel.Error) {
       // eslint-disable-next-line no-console
       console.error(line);
@@ -81,7 +72,7 @@ interface DestinationEntry {
 /**
  * Multi-destination logger with level filtering.
  * Implements Foundation's LoggerProtocol; verbose is a Core-only extension
- * that has no Foundation counterpart (mapped to debug at the protocol boundary).
+ * that maps to debug at the protocol boundary (Foundation has no verbose level).
  *
  * @example
  * ```typescript
@@ -96,22 +87,10 @@ export class Logger implements LoggerProtocol {
   /**
    * Add a log destination with an optional minimum level filter.
    * @param destination - The destination to add.
-   * @param minLevel - Minimum log level for this destination (default: Verbose).
+   * @param minLevel - Minimum log level for this destination (default: Debug).
    */
-  addDestination(destination: LogDestination, minLevel: LogLevel = LogLevel.Verbose): void {
+  addDestination(destination: LogDestination, minLevel: LogLevel = LogLevel.Debug): void {
     this.destinations.push({ destination, minLevel });
-  }
-
-  /** Map Foundation's LogLevel to Core's LogLevel. Verbose has no Foundation equivalent. */
-  private static mapFoundationLevel(foundationLevel: FoundationLogLevel): LogLevel {
-    switch (foundationLevel) {
-      case FoundationLogLevel.Debug:    return LogLevel.Debug;
-      case FoundationLogLevel.Info:     return LogLevel.Info;
-      case FoundationLogLevel.Warning:  return LogLevel.Warning;
-      case FoundationLogLevel.Error:    return LogLevel.Error;
-      case FoundationLogLevel.Critical: return LogLevel.Critical;
-      default:                          return LogLevel.Debug;
-    }
   }
 
   /** Dispatch a message to all destinations that meet the minimum level threshold. */
@@ -131,11 +110,10 @@ export class Logger implements LoggerProtocol {
 
   /**
    * Log a Foundation LogEntry (LoggerProtocol implementation).
-   * Foundation's LogLevel is mapped to the nearest Core LogLevel.
    */
   log(entry: LogEntry): void;
   /**
-   * Log a message at the specified Core level (Core extended API).
+   * Log a message at the specified level (Core extended API).
    * @param level - The severity level.
    * @param message - The log message.
    * @param metadata - Optional key-value metadata.
@@ -147,16 +125,15 @@ export class Logger implements LoggerProtocol {
     metadata: Record<string, string> = {},
   ): void {
     if (typeof entryOrLevel === 'object') {
-      const coreLevel = Logger.mapFoundationLevel(entryOrLevel.level);
-      this.dispatch(coreLevel, entryOrLevel.message, entryOrLevel.metadata, entryOrLevel.timestamp, entryOrLevel.error);
+      this.dispatch(entryOrLevel.level, entryOrLevel.message, entryOrLevel.metadata, entryOrLevel.timestamp, entryOrLevel.error);
     } else {
       this.dispatch(entryOrLevel, message!, metadata);
     }
   }
 
-  /** Log at Verbose level (Core-only extension; maps to debug at the Foundation protocol boundary). */
+  /** Log at Verbose level (Core-only extension; maps to Debug since Foundation has no verbose). */
   verbose(message: string, metadata?: Record<string, string>): void {
-    this.dispatch(LogLevel.Verbose, message, metadata);
+    this.dispatch(LogLevel.Debug, message, metadata);
   }
 
   /** Log at Debug level. */

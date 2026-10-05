@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-10-05
+
+### Changed
+- CI migrated from inline workflow to Syzygy-Hub reusable workflow (`rn-ci.yml`)
+- Foundation dependency constraint updated to `>=3.0.0`
+
+### Fixed
+- Logger verbose TODO comments re-tagged to `TODO(Foundation-future)`
+- npm publish packaging fixed — `files` field added to package.json
+- Internal `LogLevel` enum removed — `LogDestination` now uses Foundation's `LogLevel` directly
+- React ESLint plugins removed from devDependencies
+- tsconfig updated to exclude tests from dist output
+- release.yml Node version and invalid input corrected
+
+---
+
 ## [1.2.0] - 2026-09-18
 
 ### Changed
@@ -46,7 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - App lifecycle tracker with lifecycle-aware scoping
 - Scheduling utilities — debounce, throttle, delayed execution, cancellable timers
 
-[Unreleased]: https://github.com/Syzygy-Hub/syzygy-core-rn/compare/1.2.0...HEAD
+[Unreleased]: https://github.com/Syzygy-Hub/syzygy-core-rn/compare/3.0.0...HEAD
+[3.0.0]: https://github.com/Syzygy-Hub/syzygy-core-rn/compare/1.2.0...3.0.0
 [1.2.0]: https://github.com/Syzygy-Hub/syzygy-core-rn/compare/1.1.0...1.2.0
 [1.1.0]: https://github.com/Syzygy-Hub/syzygy-core-rn/compare/1.0.0...1.1.0
 [1.0.0]: https://github.com/Syzygy-Hub/syzygy-core-rn/releases/tag/1.0.0
